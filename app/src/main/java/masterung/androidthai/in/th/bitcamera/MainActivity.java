@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import masterung.androidthai.in.th.bitcamera.fragment.MainFragment;
 
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
