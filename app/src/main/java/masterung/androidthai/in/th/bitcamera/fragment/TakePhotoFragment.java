@@ -29,10 +29,10 @@ public class TakePhotoFragment extends Fragment{
 
     private String resultQRString;
     private ImageView camaraCImageView, cameraDImageView;
-    private Uri cameraCUri;
+    private Uri cameraCUri, cameraDUri;
     private File cameraFile, cameraCFile, cameraDFile;
 
-    private String dirString, bitCFileString;
+    private String dirString, bitCFileString, bitDFileString;
 
     public static TakePhotoFragment takePhotoInstance(String resultString) {
         TakePhotoFragment takePhotoFragment = new TakePhotoFragment();
@@ -50,13 +50,46 @@ public class TakePhotoFragment extends Fragment{
 //        Show View
         showView();
 
+//        Create File
+        createFile();
+
 //        Cancel Controller
         cancelController();
 
 //        CameraC Controller
         cameraCController();
 
+//        CameraD Controller
+        cameraDController();
+
     }   // Main Method
+
+    private void createFile() {
+        cameraFile = new File(Environment.getExternalStorageDirectory() + "/" + dirString);
+        if (!cameraFile.exists()) {
+            cameraFile.mkdirs();
+        }
+    }
+
+    private void cameraDController() {
+        cameraDImageView = getView().findViewById(R.id.imvCameraD);
+        cameraDImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                cameraDFile = new File(cameraFile, bitDFileString + "D" + ".jpg");
+
+                cameraDUri = Uri.fromFile(cameraDFile);
+
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, cameraDUri);
+                startActivityForResult(intent, 2);
+
+
+            }   // onClick
+        });
+
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -64,7 +97,6 @@ public class TakePhotoFragment extends Fragment{
 
         if (resultCode == getActivity().RESULT_OK) {
 
-//           camaraCImageView.setImageURI(cameraCUri);
             showPhoto(requestCode);
 
         } else {
@@ -79,14 +111,22 @@ public class TakePhotoFragment extends Fragment{
 
         try {
 
-            Bitmap rowBitmap = BitmapFactory.decodeStream(getActivity().getContentResolver().openInputStream(cameraCUri));
-
             switch (requestCode) {
                 case 1:
-                    camaraCImageView.setImageBitmap(rowBitmap);
+                    Bitmap rowBitmap = BitmapFactory.decodeStream(getActivity()
+                            .getContentResolver().openInputStream(cameraCUri));
+
+                    Bitmap resizeCBitmap = Bitmap.createScaledBitmap(rowBitmap, 800, 480, false);
+
+                    camaraCImageView.setImageBitmap(resizeCBitmap);
                     break;
                 case 2:
+                    Bitmap rowBitmap1 = BitmapFactory.decodeStream(getActivity()
+                            .getContentResolver().openInputStream(cameraDUri));
 
+                    Bitmap resizeDBitmap = Bitmap.createScaledBitmap(rowBitmap1, 800, 480, false);
+
+                    cameraDImageView.setImageBitmap(resizeDBitmap);
                     break;
     }
 
@@ -103,11 +143,6 @@ public class TakePhotoFragment extends Fragment{
         camaraCImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                cameraFile = new File(Environment.getExternalStorageDirectory() + "/" + dirString);
-                if (!cameraFile.exists()) {
-                    cameraFile.mkdirs();
-                }
 
                 cameraCFile = new File(cameraFile, bitCFileString + "C" + ".jpg");
 
@@ -217,6 +252,8 @@ public class TakePhotoFragment extends Fragment{
 
             bitCFileString = data[9] + data[10];
             Log.d("31AugV1", "bitCFileString ==> " + bitCFileString);
+
+            bitDFileString = data[9] + data[10];
 
             Log.d(Tag, "Debug QRcode ---->" + QRcode_Convert);
             Log.d(Tag, "Debug[0]---->" + data[0]);
