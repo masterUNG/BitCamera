@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -24,9 +25,12 @@ import java.io.File;
 import java.util.Random;
 
 import id.zelory.compressor.Compressor;
+import it.sauronsoftware.ftp4j.FTPClient;
+import it.sauronsoftware.ftp4j.FTPDataTransferListener;
 import masterung.androidthai.in.th.bitcamera.R;
+import masterung.androidthai.in.th.bitcamera.utility.MyConstant;
 
-public class TakePhotoFragment extends Fragment{
+public class TakePhotoFragment extends Fragment {
 
     private String resultQRString;
     private ImageView camaraCImageView, cameraDImageView;
@@ -36,6 +40,7 @@ public class TakePhotoFragment extends Fragment{
 
     private String dirString, bitCFileString, bitDFileString;
     private String desinationPath;
+    private boolean cameraCABoolean = false, cameraDABoolean = false;
 
     public static TakePhotoFragment takePhotoInstance(String resultString) {
         TakePhotoFragment takePhotoFragment = new TakePhotoFragment();
@@ -65,7 +70,106 @@ public class TakePhotoFragment extends Fragment{
 //        CameraD Controller
         cameraDController();
 
+//        Save Controller
+        saveController();
+
+
     }   // Main Method
+
+    private void saveController() {
+        Button button = getView().findViewById(R.id.btnSave);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (cameraCABoolean || cameraDABoolean) {
+                    uploadPhotoToServer();
+                } else {
+                    Toast.makeText(getActivity(), "Please Take Photo", Toast.LENGTH_SHORT).show();
+                }
+
+
+            }
+        });
+    }
+
+    private void uploadPhotoToServer() {
+
+        StrictMode.ThreadPolicy threadPolicy = new StrictMode.ThreadPolicy
+                .Builder().permitAll().build();
+        StrictMode.setThreadPolicy(threadPolicy);
+
+        FTPClient ftpClient = new FTPClient();
+        MyConstant myConstant = new MyConstant();
+        String tag = "31AugV3";
+
+
+
+//        For C
+        if (cameraCABoolean) {
+
+            try {
+
+                ftpClient.connect(myConstant.getHostString(), myConstant.getPortAnInt());
+                ftpClient.login(myConstant.getUserString(), myConstant.getPasswordString());
+                ftpClient.setType(FTPClient.TYPE_BINARY);
+                ftpClient.changeDirectory("MasterTest");
+                ftpClient.upload(resizeCameraCFile, new MyCheckUploadListener());
+
+
+            } catch (Exception e) {
+                Log.d(tag, "e upload ==> " + e.toString());
+                try {
+
+                } catch (Exception e1) {
+                    Log.d(tag, "e1 ==> " + e1.toString());
+                }
+            }
+
+
+
+        }   // if
+
+//        For D
+
+    }   // upload
+
+    public class MyCheckUploadListener implements FTPDataTransferListener{
+
+
+        @Override
+        public void started() {
+            Toast.makeText(getActivity(), "Start Upload", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void transferred(int i) {
+            Toast.makeText(getActivity(), "Transfer Upload", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void completed() {
+            Toast.makeText(getActivity(), "Completed Upload", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void aborted() {
+
+        }
+
+        @Override
+        public void failed() {
+            Toast.makeText(getActivity(), "Failed Upload", Toast.LENGTH_SHORT).show();
+        }
+    }   // MyCheck Class
+
+
+
+
+
+    public String getDirString() {
+        return dirString;
+    }
 
     private void createFile() {
 
@@ -103,12 +207,20 @@ public class TakePhotoFragment extends Fragment{
 
         if (resultCode == getActivity().RESULT_OK) {
 
+            switch (requestCode) {
+                case 1:
+                    cameraCABoolean = true;
+                    break;
+                case 2:
+                    cameraDABoolean = true;
+                    break;
+            }
+
             showPhoto(requestCode);
 
         } else {
             Toast.makeText(getActivity(), "Please Take Photo", Toast.LENGTH_SHORT).show();
         }
-
 
 
     }   // onActivityResult
@@ -134,7 +246,7 @@ public class TakePhotoFragment extends Fragment{
 
                     cameraDImageView.setImageBitmap(resizeDBitmap);
                     break;
-    }
+            }
 
 
         } catch (Exception e) {
@@ -143,6 +255,7 @@ public class TakePhotoFragment extends Fragment{
 
 
     }   //  showPhoto
+
 
     private void cameraCController() {
 
@@ -153,6 +266,9 @@ public class TakePhotoFragment extends Fragment{
 
                 cameraCFile = new File(cameraFile, bitCFileString + "C" + ".jpg");
 
+
+
+
                 try {
 
                     resizeCameraCFile = new Compressor(getActivity())
@@ -160,8 +276,7 @@ public class TakePhotoFragment extends Fragment{
                             .setMaxHeight(480)
                             .setQuality(100)
                             .setCompressFormat(Bitmap.CompressFormat.WEBP)
-                            .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
-                                    Environment.DIRECTORY_PICTURES).getAbsolutePath())
+                            .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath())
                             .compressToFile(cameraCFile);
 
                     Log.d("31AugV2", "resizeCameraCFile Path ==> " + resizeCameraCFile.getPath());
@@ -169,6 +284,14 @@ public class TakePhotoFragment extends Fragment{
 
                 } catch (Exception e) {
                     Log.d("31AugV2", "e resize C ==> " + e.toString());
+
+                    try {
+
+                    } catch (Exception e1) {
+                        Log.d("31AugV3", "e1 --> " + e1.toString());
+                    }
+
+
                 }
 
                 cameraCUri = Uri.fromFile(cameraCFile);
@@ -203,48 +326,44 @@ public class TakePhotoFragment extends Fragment{
         String DateIn = "", TimeIn = "";
 
 //        เช็คข้อมูลตัวแรกเท่ากับเครื่องหมาย | หรือไม่
-        if(resultQRString.charAt(0) == '|') {
+        if (resultQRString.charAt(0) == '|') {
 
             int check_FontThai = 0;
 //            วน loop เพื่อทำการ Decode Qrcode
-            for(int i = 0; i < resultQRString.length(); ++i)
-            {
+            for (int i = 0; i < resultQRString.length(); ++i) {
 
-                if(resultQRString.charAt(i) == '!')
-                {
+                if (resultQRString.charAt(i) == '!') {
                     i++;
                     char CharDecimal = resultQRString.charAt(i);
                     int ValueASCII = (int) CharDecimal;
 
-                    char char_decode = (char)(ValueASCII + 3536);
-                    if(ValueASCII == '}') {
+                    char char_decode = (char) (ValueASCII + 3536);
+                    if (ValueASCII == '}') {
                         QRcode_Convert += "ะ";
-                    }else {
+                    } else {
                         QRcode_Convert += char_decode;
                     }
-                }
-                else
-                {
+                } else {
                     //กรณี QRcode ที่เข้ามาเป็นเครื่องหมาย | ให้คืนค่าว่างกลับไป
-                    if(resultQRString.charAt(i) == '|'){
+                    if (resultQRString.charAt(i) == '|') {
                         QRcode_Convert += "";
-                    }else{
+                    } else {
                         char CharDecimal = resultQRString.charAt(i);
                         int ValueASCII = (int) CharDecimal;
                         //เช็คว่า เป็นตัวอักษรไทยหรือไม่
-                        if(ValueASCII <= 0)
-                            check_FontThai=1;
+                        if (ValueASCII <= 0)
+                            check_FontThai = 1;
 
-                        if(check_FontThai == 1){
+                        if (check_FontThai == 1) {
                             QRcode_Convert += resultQRString.charAt(i);
-                        }else{
-                            char char_decode = (char)(158 - ValueASCII);
-                            if(ValueASCII == '>'){
+                        } else {
+                            char char_decode = (char) (158 - ValueASCII);
+                            if (ValueASCII == '>') {
                                 //char_decode
                                 QRcode_Convert += ">";
-                            }else if(ValueASCII == ' '){
+                            } else if (ValueASCII == ' ') {
                                 QRcode_Convert += " ";
-                            }else{
+                            } else {
 
                                 QRcode_Convert += char_decode;
                             }
@@ -256,19 +375,18 @@ public class TakePhotoFragment extends Fragment{
         }
 
 
-
-        if(QRcode_Convert.split("\\$",-1).length-1 == 10){
+        if (QRcode_Convert.split("\\$", -1).length - 1 == 10) {
 
             String[] data = QRcode_Convert.split("\\$");
 
             TextView textView = getView().findViewById(R.id.txtResult);
             //textView.setText(data[0] + ", " + data[2]);
-            String styledText = "<font color='blue'>"+data[0]+"</font>"+", " + data[2];
+            String styledText = "<font color='blue'>" + data[0] + "</font>" + ", " + data[2];
             textView.setText(Html.fromHtml(styledText), TextView.BufferType.SPANNABLE);
 
             DateIn = data[8].substring(4, 6) + "/" + data[8].substring(2, 4);
             TimeIn = data[9].substring(0, 2) + ":" + data[9].substring(2, 4);
-            DateTimeIn += DateIn +" "+TimeIn;
+            DateTimeIn += DateIn + " " + TimeIn;
 
             TextView textView2 = getView().findViewById(R.id.txtResult2);
             textView2.setText(DateTimeIn);
@@ -294,7 +412,7 @@ public class TakePhotoFragment extends Fragment{
             Log.d(Tag, "Debug[9]---->" + data[9]);
             Log.d(Tag, "Debug[10]---->" + data[10]);
 
-        }else{
+        } else {
             Log.d(Tag, "Debug---->" + "Error!!!");
             TextView textView = getView().findViewById(R.id.txtResult);
             textView.setText(resultQRString);
