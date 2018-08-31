@@ -1,7 +1,11 @@
 package masterung.androidthai.in.th.bitcamera.fragment;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.Random;
 
 import masterung.androidthai.in.th.bitcamera.R;
 
@@ -24,6 +29,8 @@ public class TakePhotoFragment extends Fragment{
 
     private String resultQRString;
     private ImageView camaraCImageView, cameraDImageView;
+    private Uri cameraCUri;
+    private File cameraFile, cameraCFile;
 
     public static TakePhotoFragment takePhotoInstance(String resultString) {
         TakePhotoFragment takePhotoFragment = new TakePhotoFragment();
@@ -37,6 +44,8 @@ public class TakePhotoFragment extends Fragment{
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
+
 
 //        Show View
         showView();
@@ -55,7 +64,8 @@ public class TakePhotoFragment extends Fragment{
 
         if (resultCode == getActivity().RESULT_OK) {
 
-
+//           camaraCImageView.setImageURI(cameraCUri);
+            showPhoto(requestCode);
 
         } else {
             Toast.makeText(getActivity(), "Please Take Photo", Toast.LENGTH_SHORT).show();
@@ -65,13 +75,48 @@ public class TakePhotoFragment extends Fragment{
 
     }   // onActivityResult
 
+    private void showPhoto(int requestCode) {
+
+        try {
+
+            Bitmap rowBitmap = BitmapFactory.decodeStream(getActivity().getContentResolver().openInputStream(cameraCUri));
+
+            switch (requestCode) {
+                case 1:
+                    camaraCImageView.setImageBitmap(rowBitmap);
+                    break;
+                case 2:
+
+                    break;
+    }
+
+
+        } catch (Exception e) {
+            Log.d("31AugV1", "e showPhoto ==> " + e.toString());
+        }
+
+
+    }   //  showPhoto
+
     private void cameraCController() {
         camaraCImageView = getView().findViewById(R.id.imvCameraC);
         camaraCImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
+                cameraFile = new File(Environment.getExternalStorageDirectory() + "/" + "masterTest");
+                if (!cameraFile.exists()) {
+                    cameraFile.mkdirs();
+                }
+
+                Random random = new Random();
+                int i = random.nextInt(1000);
+                cameraCFile = new File(cameraFile, "UnG_" + Integer.toString(i) + ".png");
+
+                cameraCUri = Uri.fromFile(cameraCFile);
+
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, cameraCUri);
                 startActivityForResult(intent, 1);
 
             }   // onClick
