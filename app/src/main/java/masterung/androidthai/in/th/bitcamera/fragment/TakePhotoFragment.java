@@ -30,7 +30,9 @@ public class TakePhotoFragment extends Fragment{
     private String resultQRString;
     private ImageView camaraCImageView, cameraDImageView;
     private Uri cameraCUri;
-    private File cameraFile, cameraCFile;
+    private File cameraFile, cameraCFile, cameraDFile;
+
+    private String dirString, bitCFileString;
 
     public static TakePhotoFragment takePhotoInstance(String resultString) {
         TakePhotoFragment takePhotoFragment = new TakePhotoFragment();
@@ -44,8 +46,6 @@ public class TakePhotoFragment extends Fragment{
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
-
 
 //        Show View
         showView();
@@ -104,14 +104,12 @@ public class TakePhotoFragment extends Fragment{
             @Override
             public void onClick(View v) {
 
-                cameraFile = new File(Environment.getExternalStorageDirectory() + "/" + "masterTest");
+                cameraFile = new File(Environment.getExternalStorageDirectory() + "/" + dirString);
                 if (!cameraFile.exists()) {
                     cameraFile.mkdirs();
                 }
 
-                Random random = new Random();
-                int i = random.nextInt(1000);
-                cameraCFile = new File(cameraFile, "UnG_" + Integer.toString(i) + ".png");
+                cameraCFile = new File(cameraFile, bitCFileString + "C" + ".jpg");
 
                 cameraCUri = Uri.fromFile(cameraCFile);
 
@@ -214,6 +212,11 @@ public class TakePhotoFragment extends Fragment{
             TextView textView2 = getView().findViewById(R.id.txtResult2);
             textView2.setText(DateTimeIn);
 
+            dirString = data[8] + data[10];
+            Log.d("31AugV1", "dirString ==> " + dirString);
+
+            bitCFileString = data[9] + data[10];
+            Log.d("31AugV1", "bitCFileString ==> " + bitCFileString);
 
             Log.d(Tag, "Debug QRcode ---->" + QRcode_Convert);
             Log.d(Tag, "Debug[0]---->" + data[0]);
