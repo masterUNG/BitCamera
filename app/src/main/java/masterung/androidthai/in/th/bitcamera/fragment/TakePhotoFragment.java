@@ -1,6 +1,8 @@
 package masterung.androidthai.in.th.bitcamera.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -10,13 +12,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.File;
 
 import masterung.androidthai.in.th.bitcamera.R;
 
 public class TakePhotoFragment extends Fragment{
 
     private String resultQRString;
+    private ImageView camaraCImageView, cameraDImageView;
 
     public static TakePhotoFragment takePhotoInstance(String resultString) {
         TakePhotoFragment takePhotoFragment = new TakePhotoFragment();
@@ -37,8 +44,39 @@ public class TakePhotoFragment extends Fragment{
 //        Cancel Controller
         cancelController();
 
+//        CameraC Controller
+        cameraCController();
 
     }   // Main Method
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == getActivity().RESULT_OK) {
+
+
+
+        } else {
+            Toast.makeText(getActivity(), "Please Take Photo", Toast.LENGTH_SHORT).show();
+        }
+
+
+
+    }   // onActivityResult
+
+    private void cameraCController() {
+        camaraCImageView = getView().findViewById(R.id.imvCameraC);
+        camaraCImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent, 1);
+
+            }   // onClick
+        });
+    }
 
     private void cancelController() {
         Button button = getView().findViewById(R.id.btnCancel);
