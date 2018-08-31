@@ -23,6 +23,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.Random;
 
+import id.zelory.compressor.Compressor;
 import masterung.androidthai.in.th.bitcamera.R;
 
 public class TakePhotoFragment extends Fragment{
@@ -31,8 +32,10 @@ public class TakePhotoFragment extends Fragment{
     private ImageView camaraCImageView, cameraDImageView;
     private Uri cameraCUri, cameraDUri;
     private File cameraFile, cameraCFile, cameraDFile;
+    private File resizeCameraCFile;
 
     private String dirString, bitCFileString, bitDFileString;
+    private String desinationPath;
 
     public static TakePhotoFragment takePhotoInstance(String resultString) {
         TakePhotoFragment takePhotoFragment = new TakePhotoFragment();
@@ -65,7 +68,10 @@ public class TakePhotoFragment extends Fragment{
     }   // Main Method
 
     private void createFile() {
-        cameraFile = new File(Environment.getExternalStorageDirectory() + "/" + dirString);
+
+        desinationPath = Environment.getExternalStorageDirectory() + "/" + dirString;
+
+        cameraFile = new File(desinationPath);
         if (!cameraFile.exists()) {
             cameraFile.mkdirs();
         }
@@ -139,12 +145,31 @@ public class TakePhotoFragment extends Fragment{
     }   //  showPhoto
 
     private void cameraCController() {
+
         camaraCImageView = getView().findViewById(R.id.imvCameraC);
         camaraCImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 cameraCFile = new File(cameraFile, bitCFileString + "C" + ".jpg");
+
+                try {
+
+                    resizeCameraCFile = new Compressor(getActivity())
+                            .setMaxWidth(640)
+                            .setMaxHeight(480)
+                            .setQuality(100)
+                            .setCompressFormat(Bitmap.CompressFormat.WEBP)
+                            .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
+                                    Environment.DIRECTORY_PICTURES).getAbsolutePath())
+                            .compressToFile(cameraCFile);
+
+                    Log.d("31AugV2", "resizeCameraCFile Path ==> " + resizeCameraCFile.getPath());
+
+
+                } catch (Exception e) {
+                    Log.d("31AugV2", "e resize C ==> " + e.toString());
+                }
 
                 cameraCUri = Uri.fromFile(cameraCFile);
 
@@ -154,7 +179,8 @@ public class TakePhotoFragment extends Fragment{
 
             }   // onClick
         });
-    }
+
+    }   // cameraCController
 
     private void cancelController() {
         Button button = getView().findViewById(R.id.btnCancel);
