@@ -234,7 +234,8 @@ public class TakePhotoFragment extends Fragment {
                     Bitmap rowBitmap = BitmapFactory.decodeStream(getActivity()
                             .getContentResolver().openInputStream(cameraCUri));
 
-                    Bitmap resizeCBitmap = Bitmap.createScaledBitmap(rowBitmap, 800, 480, false);
+                    Bitmap resizeCBitmap = Bitmap.createScaledBitmap(rowBitmap,
+                            800, 480, false);
 
                     camaraCImageView.setImageBitmap(resizeCBitmap);
                     break;
@@ -242,7 +243,8 @@ public class TakePhotoFragment extends Fragment {
                     Bitmap rowBitmap1 = BitmapFactory.decodeStream(getActivity()
                             .getContentResolver().openInputStream(cameraDUri));
 
-                    Bitmap resizeDBitmap = Bitmap.createScaledBitmap(rowBitmap1, 800, 480, false);
+                    Bitmap resizeDBitmap = Bitmap.createScaledBitmap(rowBitmap1,
+                            800, 480, false);
 
                     cameraDImageView.setImageBitmap(resizeDBitmap);
                     break;
